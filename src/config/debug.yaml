@@ -1,3 +1,6 @@
+batch_size: 8
+upscale_factor: 4
+
 datapath:
   train:
   - /home/archimickey/Projects/pl_srgan/dataset/DIV2K/DIV2K_train_HR
@@ -6,4 +9,3 @@ datapath:
 
 dm:
   crop_size: 88
-  upscale_factor: 4
