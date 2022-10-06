@@ -1,9 +1,11 @@
 from math import log10
 import pytorch_lightning as pl
+import torch
 from torch import optim
 from torch.autograd import Variable
 
 from icecream import ic
+import wandb
 
 from .loss import GeneratorLoss
 from .model import Generator, Discriminator
@@ -28,6 +30,7 @@ class SRGAN(pl.LightningModule):
         loss_dict = {}
         
         gen_output = self.generator(z)
+        wandb.log({'gen_output': wandb.Image(gen_output[0])})
         
         # Update Discriminator network
         real_out = self.discriminator(real_img).mean()
@@ -47,7 +50,7 @@ class SRGAN(pl.LightningModule):
         self.manual_backward(g_loss)
         gen_opt.step()
         
-        loss_dict |= {'d_loss': d_loss, 'g_loss': g_loss}
+        loss_dict |= {'train/d_loss': d_loss, 'train/g_loss': g_loss}
         
         self.log_dict(loss_dict, prog_bar=True)
         
@@ -62,14 +65,26 @@ class SRGAN(pl.LightningModule):
         ssim_loss = ssim(sr, hr).item()
         psnr_loss = 10 * log10((hr.max()**2) / mse_loss)
         
-        return {
-            'mse_loss': mse_loss,
-            'ssim_loss': ssim_loss,
-            'psnr_loss': psnr_loss
+        loss_dict = {
+            'val/mse_loss': mse_loss,
+            'val/ssim_loss': ssim_loss,
+            'val/psnr_loss': psnr_loss
         }
+        
+        self.log_dict(loss_dict)
+        
+        return loss_dict
 
     def configure_optimizers(self):
         gen_opt = optim.Adam(self.generator.parameters())
         dis_opt = optim.Adam(self.discriminator.parameters())
         
         return gen_opt, dis_opt
+    
+    def configure_gradient_clipping(
+        self, optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm
+    ):
+        grad_norm = torch.nn.utils.clip_grad_norm_(
+            sum([p["params"] for p in optimizer.param_groups], []), gradient_clip_val
+        )
+        self.log("grad_norm", grad_norm)

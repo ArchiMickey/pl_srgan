@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import hydra
+from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
 from loguru import logger
@@ -13,11 +14,7 @@ def main(cfg: DictConfig) -> None:
     ic(cfg)
     dm = SRGANDataModule(cfg)
     model = SRGAN(cfg)
-    trainer = pl.Trainer(
-        max_epochs=100,
-        devices=1,
-        accelerator='gpu',
-    )
+    trainer = instantiate(cfg.trainer)
     trainer.fit(model, datamodule=dm)
 
 if __name__ == '__main__':
