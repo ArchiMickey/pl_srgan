@@ -1,4 +1,5 @@
 from math import log10
+import numpy as np
 import pytorch_lightning as pl
 import torch
 from torch import optim
@@ -20,55 +21,73 @@ class SRGAN(pl.LightningModule):
         self.discriminator = Discriminator()
         
         self.generator_criterion = GeneratorLoss()
-        
-        self.automatic_optimization = False
-    
-    def training_step(self, batch):
-        gen_opt, dis_opt = self.optimizers()
+            
+    def training_step(self, batch, batch_idx, optimizer_idx):    
         real_img = Variable(batch['hr_img'])
         z = Variable(batch['lr_img'])
-        loss_dict = {}
         
         gen_output = self.generator(z)
-        wandb.log({'gen_output': wandb.Image(gen_output[0])})
+        if self.global_step % self.trainer.log_every_n_steps == 0:
+            wandb.log(
+                {
+                    'train_img/lr_img': wandb.Image(batch['lr_img'][0]),
+                    'train_img/gen_output': wandb.Image(gen_output[0]),
+                    'train_img/real_img': wandb.Image(real_img[0]),
+                }
+            )
+            
+        if optimizer_idx == 0:
+            # Update G network
+            fake_out = self.discriminator(gen_output).mean()
+            g_loss = self.generator_criterion(fake_out, gen_output, real_img)
+            
+            self.log('train/g_loss', g_loss)
+            
+            return g_loss
         
-        # Update Discriminator network
-        real_out = self.discriminator(real_img).mean()
-        fake_out = self.discriminator(gen_output.detach()).mean()
-        d_loss = (1 - real_out) ** 2 + fake_out ** 2
+        if optimizer_idx == 1:
+            # Update Discriminator network
+            real_out = self.discriminator(real_img).mean()
+            fake_out = self.discriminator(gen_output.detach()).mean()
+            d_loss = (1 - real_out) ** 2 + fake_out ** 2
+            
+            self.log('train/d_loss', d_loss)
+            
+            return d_loss
         
-        dis_opt.zero_grad()
-        self.manual_backward(d_loss)
-        dis_opt.step()
-        
-        # Update G network
-        fake_out = self.discriminator(gen_output).mean()
-        g_loss = self.generator_criterion(fake_out, gen_output, real_img)
         
 
-        gen_opt.zero_grad()
-        self.manual_backward(g_loss)
-        gen_opt.step()
-        
-        loss_dict |= {'train/d_loss': d_loss, 'train/g_loss': g_loss}
-        
-        self.log_dict(loss_dict, prog_bar=True)
-        
-        return loss_dict
-
-    def validation_step(self, batch, *args, **kwargs):
+    def validation_step(self, batch, batch_idx):
         lr = batch['lr_img']
         hr = batch['hr_img']
+        mses = []
+        ssims = []
+        psnrs = []
+        for i in range(len(lr)):
+            sr = self.generator(lr[i].unsqueeze(0))
+            hr_img = hr[i].unsqueeze(0)
+            mse_loss = ((sr - hr_img) ** 2).data.mean()
+            ssim_loss = ssim(sr, hr_img).item()
+            psnr_loss = 10 * log10((hr_img.max()**2) / mse_loss)
+            
+            mses.append(mse_loss.cpu())
+            ssims.append(ssim_loss)
+            psnrs.append(psnr_loss)
         
-        sr = self.generator(lr)
-        mse_loss = ((sr - hr) ** 2).data.mean()
-        ssim_loss = ssim(sr, hr).item()
-        psnr_loss = 10 * log10((hr.max()**2) / mse_loss)
+        if batch_idx == 0:
+            l = len(lr)
+            wandb.log(
+                {
+                    'val_img/val_lr': wandb.Image(lr[l-1]),
+                    'val_img/val_sr': wandb.Image(sr[0]),
+                    'val_img/val_hr': wandb.Image(hr[l-1]),
+                }
+            )
         
         loss_dict = {
-            'val/mse_loss': mse_loss,
-            'val/ssim_loss': ssim_loss,
-            'val/psnr_loss': psnr_loss
+            'val/mse_loss': np.mean(mses),
+            'val/ssim_loss': np.mean(ssims),
+            'val/psnr_loss': np.mean(psnrs),
         }
         
         self.log_dict(loss_dict)

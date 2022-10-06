@@ -1,11 +1,13 @@
-batch_size: 2
+batch_size: 64
 upscale_factor: 4
 
 datapath:
   train:
   - /home/archimickey/Projects/pl_srgan/dataset/DIV2K/DIV2K_train_HR
+  - /home/archimickey/Projects/pl_srgan/dataset/VOC2012/train
   val:
   - /home/archimickey/Projects/pl_srgan/dataset/DIV2K/DIV2K_valid_HR
+  - /home/archimickey/Projects/pl_srgan/dataset/VOC2012/val
 
 dm:
   crop_size: 88
@@ -14,7 +16,6 @@ dm:
 logger:
   _target_: pytorch_lightning.loggers.WandbLogger
   name: srgan
-  offline: True
 
 trainer:
   _target_: pytorch_lightning.Trainer
@@ -22,5 +23,7 @@ trainer:
   devices: 1
   logger: ${logger}
   log_every_n_steps: 100
-  max_epochs: 1000
+  max_epochs: 10000
   gradient_clip_val: 1000
+  check_val_every_n_epoch: 10
+  
