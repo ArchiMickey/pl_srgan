@@ -18,5 +18,5 @@ trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: 1
-  # logger: ${logger}
+  logger: ${logger}
   log_every_n_steps: 100
