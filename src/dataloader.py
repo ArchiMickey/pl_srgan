@@ -1,3 +1,4 @@
+from collections import defaultdict
 import pytorch_lightning as pl
 from os import listdir
 from os.path import join
@@ -28,7 +29,7 @@ def train_hr_transform(crop_size):
 def train_lr_transform(crop_size, upscale_factor):
     return Compose([
         ToPILImage(),
-        Resize(crop_size // upscale_factor, interpolation=Image.BICUBIC),
+        Resize(crop_size // upscale_factor, interpolation=Image.LANCZOS),
         ToTensor()
     ])
 
@@ -113,8 +114,8 @@ class ValDataset(Dataset):
         hr_image = Image.open(filename)
         w, h = hr_image.size
         crop_size = calculate_valid_crop_size(min(w, h), self.upscale_factor)
-        lr_scale = Resize(crop_size // self.upscale_factor, interpolation=Image.BICUBIC)
-        hr_scale = Resize(crop_size, interpolation=Image.BICUBIC)
+        lr_scale = Resize(crop_size // self.upscale_factor, interpolation=Image.LANCZOS)
+        hr_scale = Resize(crop_size, interpolation=Image.LANCZOS)
         hr_image = CenterCrop(crop_size)(hr_image)
         lr_image = lr_scale(hr_image)
         hr_restore_img = hr_scale(lr_image)
@@ -129,12 +130,10 @@ class ValDataset(Dataset):
         return len(self.image_filenames)
 
 def val_collate(batch):
-    ret = {}
-    for k in batch[0].keys():
-        ret[k] = []
-        for data in batch:
-            ret[k].append(data[k])
-                            
+    ret = defaultdict(list)
+    for data in batch:
+        for k, v in data.items():
+            ret[k].append(v)
     return ret
 
 if __name__ == '__main__':
