@@ -42,6 +42,13 @@ def display_transform():
         ToTensor()
     ])
 
+def verify_dataset(dataset: list, crop_size):
+    for datapath in dataset:
+        img = Image.open(datapath)
+        w, h = img.size
+        if w < crop_size or h < crop_size:
+            dataset.remove(datapath)
+            logger.info(f'Removing {datapath} due to small size')
 
 class SRGANDataModule(pl.LightningDataModule):
     def __init__(self, cfg) -> None:
@@ -63,19 +70,16 @@ class SRGANDataModule(pl.LightningDataModule):
                 logger.info(f'Loading train data from {path}:')
                 for x in tqdm(listdir(path)):
                     if is_image_file(x):
-                        img = Image.open(join(path, x))
-                        w, h = img.size
-                        if w >= self.crop_size and h >= self.crop_size:
-                            self.srgan_train += [join(path, x)]
+                        self.srgan_train += [join(path, x)]
             
             for path in self.val_datapath:
                 logger.info(f'Loading val data from {path}:')
                 for x in tqdm(listdir(path)):
                     if is_image_file(x):
-                        img = Image.open(join(path, x))
-                        w, h = img.size
-                        if w >= self.crop_size and h >= self.crop_size:
-                            self.srgan_val += [join(path, x)]
+                        self.srgan_val += [join(path, x)]
+            
+            verify_dataset(self.srgan_train, self.crop_size)
+            verify_dataset(self.srgan_val, self.crop_size)
             
     
     def train_dataloader(self):
