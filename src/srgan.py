@@ -74,12 +74,12 @@ class SRGAN(pl.LightningModule):
             ssims.append(ssim_loss)
             psnrs.append(psnr_loss)
         
-        if self.global_step % self.trainer.log_every_n_steps == 0:
+        if batch_idx == 0:
             wandb.log(
                 {
-                    'val_img/lr_img': wandb.Image(lr[0]),
+                    'val_img/lr_img': wandb.Image(lr[len(lr) - 1]),
                     'val_img/gen_output': wandb.Image(sr[0]),
-                    'val_img/real_img': wandb.Image(hr[0]),
+                    'val_img/real_img': wandb.Image(hr[len(hr) - 1]),
                 }
             )
         

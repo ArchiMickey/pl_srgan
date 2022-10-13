@@ -63,13 +63,19 @@ class SRGANDataModule(pl.LightningDataModule):
                 logger.info(f'Loading train data from {path}:')
                 for x in tqdm(listdir(path)):
                     if is_image_file(x):
-                        self.srgan_train += [join(path, x)]
+                        img = Image.open(join(path, x))
+                        w, h = img.size
+                        if w >= self.crop_size and h >= self.crop_size:
+                            self.srgan_train += [join(path, x)]
             
             for path in self.val_datapath:
                 logger.info(f'Loading val data from {path}:')
                 for x in tqdm(listdir(path)):
                     if is_image_file(x):
-                        self.srgan_val += [join(path, x)]
+                        img = Image.open(join(path, x))
+                        w, h = img.size
+                        if w >= self.crop_size and h >= self.crop_size:
+                            self.srgan_val += [join(path, x)]
             
     
     def train_dataloader(self):
