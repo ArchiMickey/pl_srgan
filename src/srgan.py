@@ -9,7 +9,7 @@ from icecream import ic
 import wandb
 
 from .dataloader import display_transform
-from .loss import GeneratorLoss
+from .loss import GeneratorLoss, DiscriminatorLoss
 from .model import Generator, Discriminator
 from .ssim import ssim
 
@@ -22,7 +22,8 @@ class SRGAN(pl.LightningModule):
         self.generator = Generator(cfg['upscale_factor'])
         self.discriminator = Discriminator()
         
-        self.generator_criterion = GeneratorLoss()
+        self.generator_criterion = GeneratorLoss(scale=cfg.loss.generator_loss.scale)
+        self.discriminator_criterion = DiscriminatorLoss(scale=cfg.loss.discriminator_loss.scale)
             
     def training_step(self, batch, batch_idx, optimizer_idx):    
         real_img = Variable(batch['hr_img'])
@@ -51,9 +52,7 @@ class SRGAN(pl.LightningModule):
         
         if optimizer_idx == 1:
             # Update Discriminator network
-            real_out = self.discriminator(real_img).mean()
-            fake_out = self.discriminator(gen_output.detach()).mean()
-            d_loss = (1 - real_out) ** 2 + fake_out ** 2
+            d_loss = self.discriminator_criterion(self.discriminator, real_img, gen_output)
             
             self.log('train/d_loss', d_loss)
             
@@ -63,7 +62,7 @@ class SRGAN(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         lr = batch['lr_img']
-        hr = batch['hr_img']
+        hr = batch['original_img']
         mses = []
         ssims = []
         psnrs = []

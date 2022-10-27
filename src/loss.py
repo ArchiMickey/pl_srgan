@@ -1,10 +1,11 @@
+from turtle import forward
 import torch
 from torch import nn
 from torchvision.models.vgg import vgg16
 
 
 class GeneratorLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, scale=1):
         super(GeneratorLoss, self).__init__()
         vgg = vgg16(pretrained=True)
         loss_network = nn.Sequential(*list(vgg.features)[:31]).eval()
@@ -13,6 +14,7 @@ class GeneratorLoss(nn.Module):
         self.loss_network = loss_network
         self.mse_loss = nn.MSELoss()
         self.tv_loss = TVLoss()
+        self.scale = scale
 
     def forward(self, out_labels, out_images, target_images):
         # Adversarial Loss
@@ -23,7 +25,7 @@ class GeneratorLoss(nn.Module):
         image_loss = self.mse_loss(out_images, target_images)
         # TV Loss
         tv_loss = self.tv_loss(out_images)
-        return image_loss + 0.001 * adversarial_loss + 0.006 * perception_loss + 2e-8 * tv_loss
+        return (image_loss + 0.001 * adversarial_loss + 0.006 * perception_loss + 2e-8 * tv_loss) * self.scale
 
 
 class TVLoss(nn.Module):
@@ -44,6 +46,18 @@ class TVLoss(nn.Module):
     @staticmethod
     def tensor_size(t):
         return t.size()[1] * t.size()[2] * t.size()[3]
+
+class DiscriminatorLoss(nn.Module):
+    def __init__(self, scale=1) -> None:
+        super(DiscriminatorLoss, self).__init__()
+        self.scale = scale
+    
+    def forward(self, discriminator, real_img, gen_output):
+        real_out = discriminator(real_img).mean()
+        fake_out = discriminator(gen_output.detach()).mean()
+        d_loss = (1 - real_out) ** 2 + fake_out ** 2
+        return d_loss * self.scale
+        
 
 
 if __name__ == "__main__":
