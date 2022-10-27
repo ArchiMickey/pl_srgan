@@ -1,15 +1,16 @@
 batch_size: 2
+lr: 1e-4
 upscale_factor: 4
 
 datapath:
   train:
-  - /home/archimickey/Projects/pl_srgan/dataset/DIV2K/DIV2K_train_HR
+  - dataset/DIV2K/DIV2K_train_HR
   val:
-  - /home/archimickey/Projects/pl_srgan/dataset/DIV2K/DIV2K_valid_HR
+  - dataset/DIV2K/DIV2K_valid_HR
 
 dm:
   crop_size: 88
-  num_workers: 12
+  num_workers: 6
 
 logger:
   _target_: pytorch_lightning.loggers.WandbLogger

@@ -8,6 +8,7 @@ from torch.autograd import Variable
 from icecream import ic
 import wandb
 
+from .dataloader import display_transform
 from .loss import GeneratorLoss
 from .model import Generator, Discriminator
 from .ssim import ssim
@@ -17,6 +18,7 @@ class SRGAN(pl.LightningModule):
     def __init__(self, cfg) -> None:
         super().__init__()
         self.batch_size = cfg['batch_size']
+        self.lr = cfg['lr']
         self.generator = Generator(cfg['upscale_factor'])
         self.discriminator = Discriminator()
         
@@ -28,13 +30,15 @@ class SRGAN(pl.LightningModule):
         
         gen_output = self.generator(z)
         if self.global_step % self.trainer.log_every_n_steps == 0:
-            wandb.log(
-                {
-                    'train_img/lr_img': wandb.Image(batch['lr_img'][0]),
-                    'train_img/gen_output': wandb.Image(gen_output[0]),
-                    'train_img/real_img': wandb.Image(real_img[0]),
-                }
-            )
+            lr_img = batch['lr_img'][0].cpu().detach()
+            hr_img = real_img[0].cpu().detach()
+            sr_img = gen_output[0].cpu().detach()
+            train_img = torch.stack([
+                display_transform()(lr_img),
+                display_transform()(hr_img),
+                display_transform()(sr_img),
+            ])
+            wandb.log({'train/img': wandb.Image(train_img)})
             
         if optimizer_idx == 0:
             # Update G network
@@ -75,13 +79,15 @@ class SRGAN(pl.LightningModule):
             psnrs.append(psnr_loss)
         
         if batch_idx == 0:
-            wandb.log(
-                {
-                    'val_img/lr_img': wandb.Image(lr[len(lr) - 1]),
-                    'val_img/gen_output': wandb.Image(sr[0]),
-                    'val_img/real_img': wandb.Image(hr[len(hr) - 1]),
-                }
-            )
+            lr_img = lr[len(lr) - 1].cpu().detach()
+            hr_img = hr[len(hr) - 1].cpu().detach()
+            sr_img = sr[0].cpu().detach()
+            val_img = torch.stack([
+                display_transform()(lr_img),
+                display_transform()(hr_img),
+                display_transform()(sr_img),
+            ])
+            wandb.log({'val/img': wandb.Image(val_img)})
         
         loss_dict = {
             'val/mse_loss': np.mean(mses),
@@ -94,8 +100,8 @@ class SRGAN(pl.LightningModule):
         return loss_dict
 
     def configure_optimizers(self):
-        gen_opt = optim.Adam(self.generator.parameters())
-        dis_opt = optim.Adam(self.discriminator.parameters())
+        gen_opt = optim.Adam(self.generator.parameters(), lr=self.lr)
+        dis_opt = optim.Adam(self.discriminator.parameters(), lr=self.lr)
         
         return gen_opt, dis_opt
     

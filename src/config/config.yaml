@@ -1,29 +1,39 @@
-batch_size: 64
+batch_size: 16
+lr: 1e-4
 upscale_factor: 4
 
 datapath:
   train:
-  - /home/archimickey/Projects/pl_srgan/dataset/DIV2K/DIV2K_train_HR
-  - /home/archimickey/Projects/pl_srgan/dataset/VOC2012/train
+  - dataset/DIV2K/DIV2K_train_HR
+  - dataset/VOC2012/train
   val:
-  - /home/archimickey/Projects/pl_srgan/dataset/DIV2K/DIV2K_valid_HR
-  - /home/archimickey/Projects/pl_srgan/dataset/VOC2012/val
+  - dataset/DIV2K/DIV2K_valid_HR
+  - dataset/VOC2012/val
 
 dm:
-  crop_size: 88
-  num_workers: 12
+  crop_size: 128
+  num_workers: 6
 
 logger:
   _target_: pytorch_lightning.loggers.WandbLogger
   name: srgan
+  project: srgan
 
 trainer:
   _target_: pytorch_lightning.Trainer
   accelerator: gpu
   devices: 1
   logger: ${logger}
-  log_every_n_steps: 100
+  log_every_n_steps: 200
   max_epochs: 10000
   gradient_clip_val: 1000
-  check_val_every_n_epoch: 10
-  
+  check_val_every_n_epoch: 5
+  callbacks:
+    - _target_: pytorch_lightning.callbacks.ModelCheckpoint
+      monitor: val/psnr_loss
+      save_top_k: 3
+      mode: min
+      save_last: True
+      filename: "srgan_{epoch:02d}"
+    - _target_: pytorch_lightning.callbacks.ModelSummary
+      max_depth: 5
