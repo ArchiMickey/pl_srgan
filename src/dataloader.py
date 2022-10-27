@@ -133,7 +133,7 @@ class ValDataset(Dataset):
             'filename': filename,
             'lr_img': ToTensor()(lr_image),
             'hr_img': ToTensor()(hr_restore_img),
-            'origional_img': ToTensor()(hr_image)
+            'original_img': ToTensor()(hr_image)
         }
     
     def __len__(self):
