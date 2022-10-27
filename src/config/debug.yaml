@@ -1,6 +1,7 @@
 batch_size: 2
 lr: 1e-4
 upscale_factor: 4
+name: pl_srgan-debug
 
 datapath:
   train:
@@ -8,13 +9,19 @@ datapath:
   val:
   - dataset/DIV2K/DIV2K_valid_HR
 
+loss:
+  generator_loss:
+    scale: 20
+  discriminator_loss:
+    scale: 8e6
+
 dm:
   crop_size: 88
   num_workers: 6
 
 logger:
   _target_: pytorch_lightning.loggers.WandbLogger
-  name: pl_srgan
+  name: ${name}
   project: pl_srgan
   offline: True
 
