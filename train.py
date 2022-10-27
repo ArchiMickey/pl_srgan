@@ -1,7 +1,6 @@
-import pytorch_lightning as pl
 import hydra
 from hydra.utils import instantiate
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 from loguru import logger
 from icecream import ic
