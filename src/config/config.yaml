@@ -1,5 +1,5 @@
-batch_size: 16
-lr: 1e-4
+batch_size: 64
+lr: 6.25e-5
 upscale_factor: 4
 
 datapath:
@@ -12,12 +12,12 @@ datapath:
 
 dm:
   crop_size: 128
-  num_workers: 6
+  num_workers: 12
 
 logger:
   _target_: pytorch_lightning.loggers.WandbLogger
-  name: srgan
-  project: srgan
+  name: pl_srgan
+  project: pl_srgan
 
 trainer:
   _target_: pytorch_lightning.Trainer

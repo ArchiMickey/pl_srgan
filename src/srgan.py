@@ -38,7 +38,7 @@ class SRGAN(pl.LightningModule):
                 display_transform()(hr_img),
                 display_transform()(sr_img),
             ])
-            wandb.log({'train/img': wandb.Image(train_img)})
+            wandb.log({'output/train_img': wandb.Image(train_img)})
             
         if optimizer_idx == 0:
             # Update G network
@@ -87,7 +87,7 @@ class SRGAN(pl.LightningModule):
                 display_transform()(hr_img),
                 display_transform()(sr_img),
             ])
-            wandb.log({'val/img': wandb.Image(val_img)})
+            wandb.log({'output/val_img': wandb.Image(val_img)})
         
         loss_dict = {
             'val/mse_loss': np.mean(mses),

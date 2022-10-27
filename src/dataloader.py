@@ -29,7 +29,7 @@ def train_hr_transform(crop_size):
 def train_lr_transform(crop_size, upscale_factor):
     return Compose([
         ToPILImage(),
-        Resize(crop_size // upscale_factor, interpolation=Image.LANCZOS),
+        Resize(crop_size // upscale_factor, interpolation=Image.BICUBIC),
         ToTensor()
     ])
 
@@ -124,8 +124,8 @@ class ValDataset(Dataset):
         hr_image = Image.open(filename)
         w, h = hr_image.size
         crop_size = calculate_valid_crop_size(min(w, h), self.upscale_factor)
-        lr_scale = Resize(crop_size // self.upscale_factor, interpolation=Image.LANCZOS)
-        hr_scale = Resize(crop_size, interpolation=Image.LANCZOS)
+        lr_scale = Resize(crop_size // self.upscale_factor, interpolation=Image.BICUBIC)
+        hr_scale = Resize(crop_size, interpolation=Image.BICUBIC)
         hr_image = CenterCrop(crop_size)(hr_image)
         lr_image = lr_scale(hr_image)
         hr_restore_img = hr_scale(lr_image)

@@ -14,7 +14,8 @@ dm:
 
 logger:
   _target_: pytorch_lightning.loggers.WandbLogger
-  name: srgan
+  name: pl_srgan
+  project: pl_srgan
   offline: True
 
 trainer:
