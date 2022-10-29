@@ -72,11 +72,11 @@ class SRGAN(pl.LightningModule):
             sr = self.generator(lr[i].unsqueeze(0))
             hr_img = hr[i].unsqueeze(0)
             mse_loss = ((sr - hr_img) ** 2).data.mean()
-            ssim = ssim(sr, hr_img).item()
+            ssim_ = ssim(sr, hr_img).item()
             psnr = 10 * log10((hr_img.max()**2) / mse_loss)
             
             mses.append(mse_loss.cpu())
-            ssims.append(ssim)
+            ssims.append(ssim_)
             psnrs.append(psnr)
         
         if batch_idx == 0:
