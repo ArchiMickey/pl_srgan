@@ -5,10 +5,8 @@ name: pl_srgan
 
 datapath:
   train:
-  - dataset/DIV2K/DIV2K_train_HR
   - dataset/VOC2012/train
   val:
-  - dataset/DIV2K/DIV2K_valid_HR
   - dataset/VOC2012/val
 
 loss:
@@ -41,6 +39,7 @@ trainer:
       monitor: val/psnr_loss
       save_top_k: 3
       mode: min
+      dirpath: ${name}/checkpoints
       filename: "srgan_{epoch:02d}"
       verbose: True
     - _target_: pytorch_lightning.callbacks.ModelSummary
