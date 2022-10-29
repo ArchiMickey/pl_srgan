@@ -15,7 +15,10 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 def main(cfg: DictConfig) -> None:
     ic(dict(cfg))
     dm = SRGANDataModule(cfg)
-    model = SRGAN(cfg)
+    if cfg['ckpt_path']:
+        model = SRGAN.load_from_checkpoint(cfg['ckpt_path'])
+    else:
+        model = SRGAN(cfg)
     trainer = instantiate(cfg.trainer)
     trainer.fit(model, datamodule=dm)
 

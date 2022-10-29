@@ -19,6 +19,8 @@ class SRGAN(pl.LightningModule):
         super().__init__()
         self.batch_size = cfg['batch_size']
         self.lr = cfg['lr']
+        self.save_hyperparameters()
+        
         self.generator = Generator(cfg['upscale_factor'])
         self.discriminator = Discriminator()
         
@@ -70,12 +72,12 @@ class SRGAN(pl.LightningModule):
             sr = self.generator(lr[i].unsqueeze(0))
             hr_img = hr[i].unsqueeze(0)
             mse_loss = ((sr - hr_img) ** 2).data.mean()
-            ssim_loss = ssim(sr, hr_img).item()
-            psnr_loss = 10 * log10((hr_img.max()**2) / mse_loss)
+            ssim = ssim(sr, hr_img).item()
+            psnr = 10 * log10((hr_img.max()**2) / mse_loss)
             
             mses.append(mse_loss.cpu())
-            ssims.append(ssim_loss)
-            psnrs.append(psnr_loss)
+            ssims.append(ssim)
+            psnrs.append(psnr)
         
         if batch_idx == 0:
             lr_img = lr[len(lr) - 1].cpu().detach()
@@ -90,8 +92,8 @@ class SRGAN(pl.LightningModule):
         
         loss_dict = {
             'val/mse_loss': np.mean(mses),
-            'val/ssim_loss': np.mean(ssims),
-            'val/psnr_loss': np.mean(psnrs),
+            'val/ssim': np.mean(ssims),
+            'val/psnr': np.mean(psnrs),
         }
         
         self.log_dict(loss_dict)
