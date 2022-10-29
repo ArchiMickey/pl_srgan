@@ -48,7 +48,7 @@ def verify_dataset(dataset: list, crop_size):
         w, h = img.size
         if w < crop_size or h < crop_size:
             dataset.remove(datapath)
-            logger.info(f'Removing {datapath} due to small size')
+            logger.info(f'Skipping {datapath} due to small size')
 
 class SRGANDataModule(pl.LightningDataModule):
     def __init__(self, cfg) -> None:
