@@ -16,7 +16,7 @@ def main(cfg: DictConfig) -> None:
     ic(dict(cfg))
     dm = SRGANDataModule(cfg)
     if cfg['ckpt_path']:
-        model = SRGAN.load_from_checkpoint(cfg['ckpt_path'])
+        model = SRGAN.load_from_checkpoint(cfg['ckpt_path'], cfg=cfg)
     else:
         model = SRGAN(cfg)
     trainer = instantiate(cfg.trainer)

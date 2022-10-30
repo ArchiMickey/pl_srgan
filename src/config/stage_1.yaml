@@ -1,0 +1,48 @@
+batch_size: 64
+lr: 1e-4
+upscale_factor: 4
+name: pl_srgan
+ckpt_path: pl_srgan/1zye5lex/checkpoints/last.ckpt
+
+datapath:
+  train:
+  - dataset/SRGAN/VOC2012/train
+  val:
+  - dataset/SRGAN/VOC2012/val
+
+loss:
+  generator_loss:
+    scale: 20
+  discriminator_loss:
+    scale: 8e6
+
+dm:
+  crop_size: 128
+  num_workers: 12
+
+logger:
+  _target_: pytorch_lightning.loggers.WandbLogger
+  name: ${name}
+  project: pl_srgan
+
+trainer:
+  _target_: pytorch_lightning.Trainer
+  accelerator: gpu
+  devices: 1
+  logger: ${logger}
+  log_every_n_steps: 200
+  # max_epochs: 10000
+  max_steps: 1e5
+  gradient_clip_val: 1000
+  val_check_interval: 500
+  check_val_every_n_epoch: null
+  callbacks:
+    - _target_: pytorch_lightning.callbacks.ModelCheckpoint
+      monitor: val/psnr
+      save_top_k: 3
+      mode: max
+      save_last: True
+      filename: "srgan_{epoch:02d}"
+      verbose: True
+    - _target_: pytorch_lightning.callbacks.ModelSummary
+      max_depth: 5
