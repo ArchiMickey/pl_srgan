@@ -14,9 +14,9 @@ datapath:
 
 loss:
   generator_loss:
-    scale: 40
+    scale: 400
   discriminator_loss:
-    scale: 20
+    scale: 2
 
 dm:
   crop_size: 128
