@@ -1,9 +1,6 @@
 # Introduction
 This is an implementation of SRGAN with pytorch lightning. I code this for learning pytorch lightning and SRGAN.
 
-# Training
-In my training, I use DIV2K and VOC2012 dataset. You can create your own dataset directory and edit the path in your config yaml file.
-
 # How to use
 ## Environment setup
 You can install the conda environment with `environment.yml` provided. Command:
@@ -13,7 +10,7 @@ conda env create -f environment.yml
 ## Dataset
 Eventually I used Flickr2K and DIV2K dataset to train my model. Additionally, I used VOC2012 and DIV2K to debug my model. You can link your dataset directory inside `dataset`. After that, add `dataset/{PATH}` in the config yaml file.
 ## Training
-In my project, I followed the training methods from the original paper. I trained my model with learning rate `1e-4` for `1e5` update iterations followed by `1e-5` for `1e5` update iterations.
+In my project, I followed the training methods from the [original paper](https://arxiv.org/abs/1609.04802). I trained my model with learning rate `1e-4` for `1e5` update iterations followed by `1e-5` for `1e5` update iterations.
 ## Results
 ![result_img](results/output.png)
 image: Set14_005\
