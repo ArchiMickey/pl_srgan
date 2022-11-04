@@ -15,7 +15,6 @@ Eventually I used Flickr2K and DIV2K dataset to train my model. Additionally, I 
 ## Training
 In my project, I followed the training methods from the original paper. I trained my model with learning rate `1e-4` for `1e5` update iterations followed by `1e-5` for `1e5` update iterations.
 ## Results
-Here is an image for comparing the low-resolution image, high-resolution image and superresolution image from my model:
 ![result_img](results/output.png)
 image: Set14_005\
 upscale factor: 4\
