@@ -5,3 +5,4 @@ ref
 lightning_logs
 wandb
 pl_srgan
+checkpoints/**
