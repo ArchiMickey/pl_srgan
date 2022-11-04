@@ -9,10 +9,8 @@ datapath:
   train:
   - dataset/SRGAN/DIV2K/DIV2K_train_HR
   - dataset/SRGAN/Flickr2K
-  - dataset/SRGAN/VOC2012/train
   val:
   - dataset/SRGAN/DIV2K/DIV2K_valid_HR
-  - dataset/SRGAN/VOC2012/val
 
 loss:
   generator_loss:
